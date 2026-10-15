@@ -1,1 +1,170 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KitBench | Student Portal</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f4ff;
+      color: #172554;
+    }
+    header {
+      background: #172554;
+      color: white;
+      padding: 22px;
+      text-align: center;
+    }
+    main {
+      max-width: 420px;
+      margin: 40px auto;
+      padding: 26px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 28px #17255418;
+    }
+    .tabs { display: flex; gap: 10px; }
+    button {
+      cursor: pointer;
+      border: 0;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 15px;
+    }
+    .tabs button { flex: 1; background: #e0e7ff; }
+    .tabs button.active, .submit {
+      background: #2563eb;
+      color: white;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+    }
+    label { font-size: 14px; }
+    .submit { width: 100%; margin-top: 8px; }
+    #message { margin-top: 16px; overflow-wrap: anywhere; }
+    .note { font-size: 13px; color: #64748b; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>KitBench</h1>
+    <p>Build Skills. Create Projects. Learn Together.</p>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button id="loginTab" class="active" type="button">Login</button>
+      <button id="signupTab" type="button">Sign Up</button>
+    </div>
+
+    <h2 id="formTitle">Student Login</h2>
+
+    <form id="authForm">
+      <div id="nameField" hidden>
+        <label for="name">Full name</label>
+        <input id="name" name="name" autocomplete="name">
+      </div>
+
+      <label for="email">Email address</label>
+      <input id="email" name="email" type="email"
+             autocomplete="email" required>
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password"
+             autocomplete="current-password" minlength="8" required>
+
+      <button class="submit" id="submitButton" type="submit">Login</button>
+    </form>
+
+    <p id="message" role="status" aria-live="polite"></p>
+    <p class="note">
+      Student registration requires email verification. The backend's
+      email service must be configured for verification emails to arrive.
+    </p>
+  </main>
+
+  <script>
+    const API = "https://kitbench-api.onrender.com";
+    let mode = "login";
+
+    const form = document.getElementById("authForm");
+    const message = document.getElementById("message");
+    const nameField = document.getElementById("nameField");
+    const nameInput = document.getElementById("name");
+    const passwordInput = document.getElementById("password");
+
+    function setMode(nextMode) {
+      mode = nextMode;
+      const signup = mode === "signup";
+
+      document.getElementById("loginTab").classList.toggle("active", !signup);
+      document.getElementById("signupTab").classList.toggle("active", signup);
+      document.getElementById("formTitle").textContent =
+        signup ? "Create Student Account" : "Student Login";
+      document.getElementById("submitButton").textContent =
+        signup ? "Sign Up" : "Login";
+
+      nameField.hidden = !signup;
+      nameInput.required = signup;
+      passwordInput.autocomplete = signup ? "new-password" : "current-password";
+      message.textContent = "";
+    }
+
+    document.getElementById("loginTab").addEventListener("click", () => setMode("login"));
+    document.getElementById("signupTab").addEventListener("click", () => setMode("signup"));
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.textContent = "Please wait...";
+
+      const payload = {
+        email: document.getElementById("email").value.trim(),
+        password: passwordInput.value
+      };
+
+      if (mode === "signup") {
+        payload.name = nameInput.value.trim();
+      }
+
+      try {
+        const endpoint = mode === "signup"
+          ? "/api/auth/register"
+          : "/api/auth/login";
+
+        const response = await fetch(API + endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || data.error || "Request failed. Please try again.");
+        }
+
+        message.textContent = data.message ||
+          (mode === "signup"
+            ? "Registration submitted. Check your email if verification is configured."
+            : "Login successful.");
+
+        if (mode === "login" && data.token) {
+          sessionStorage.setItem("kitbenchToken", data.token);
+        }
+      } catch (error) {
+        message.textContent = error.message ||
+          "Could not connect to the server. Please try again.";
+      }
+    });
+  </script>
+</body>
+</html>
+
