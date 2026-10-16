@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,9 +6,7 @@
   <title>KitBench | Student Portal</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -25,13 +22,8 @@
       text-align: center;
     }
 
-    header h1 {
-      margin: 0 0 8px;
-    }
-
-    header p {
-      margin-bottom: 0;
-    }
+    header h1 { margin: 0 0 8px; }
+    header p { margin-bottom: 0; }
 
     main {
       max-width: 420px;
@@ -42,10 +34,7 @@
       box-shadow: 0 8px 28px #17255418;
     }
 
-    .tabs {
-      display: flex;
-      gap: 10px;
-    }
+    .tabs { display: flex; gap: 10px; }
 
     button {
       cursor: pointer;
@@ -77,17 +66,11 @@
       font-size: 15px;
     }
 
-    label {
-      font-size: 14px;
-      font-weight: 600;
-    }
+    label { font-size: 14px; font-weight: 600; }
 
-    .submit {
-      width: 100%;
-      margin-top: 8px;
-    }
+    .submit { width: 100%; margin-top: 8px; }
 
-    .submit:disabled {
+    button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
@@ -104,15 +87,10 @@
       line-height: 1.5;
     }
 
-    [hidden] {
-      display: none !important;
-    }
+    [hidden] { display: none !important; }
 
     @media (max-width: 480px) {
-      main {
-        margin: 24px 14px;
-        padding: 22px;
-      }
+      main { margin: 24px 14px; padding: 22px; }
     }
   </style>
 </head>
@@ -125,13 +103,8 @@
 
   <main>
     <div class="tabs">
-      <button id="loginTab" class="active" type="button">
-        Login
-      </button>
-
-      <button id="signupTab" type="button">
-        Sign Up
-      </button>
+      <button id="loginTab" class="active" type="button">Login</button>
+      <button id="signupTab" type="button">Sign Up</button>
     </div>
 
     <h2 id="formTitle">Student Login</h2>
@@ -139,53 +112,27 @@
     <form id="authForm">
       <div id="nameField" hidden>
         <label for="name">Full Name</label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          autocomplete="name"
-          placeholder="Enter your full name"
-        >
+        <input id="name" name="name" type="text"
+          autocomplete="name" placeholder="Enter your full name">
       </div>
 
       <label for="email">Email Address</label>
-      <input
-        id="email"
-        name="email"
-        type="email"
-        autocomplete="email"
-        placeholder="Enter your email"
-        required
-      >
+      <input id="email" name="email" type="email"
+        autocomplete="email" placeholder="Enter your email" required>
 
       <label for="password">Password</label>
-      <input
-        id="password"
-        name="password"
-        type="password"
-        autocomplete="current-password"
-        placeholder="Enter your password"
-        minlength="8"
-        required
-      >
+      <input id="password" name="password" type="password"
+        autocomplete="current-password" placeholder="Enter your password"
+        minlength="8" required>
 
       <div id="confirmPasswordField" hidden>
         <label for="confirmPassword">Confirm Password</label>
-        <input
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          autocomplete="new-password"
-          placeholder="Re-enter your password"
-          minlength="8"
-        >
+        <input id="confirmPassword" name="confirmPassword"
+          type="password" autocomplete="new-password"
+          placeholder="Re-enter your password" minlength="8">
       </div>
 
-      <button
-        class="submit"
-        id="submitButton"
-        type="submit"
-      >
+      <button class="submit" id="submitButton" type="submit">
         Login
       </button>
     </form>
@@ -193,43 +140,43 @@
     <p id="message" role="status" aria-live="polite"></p>
 
     <p class="note">
-      Create an account to get started. Email verification depends
-      on the server's email configuration.
+      Signup may require email verification. Use your own email address
+      and keep your password private.
     </p>
   </main>
 
   <script>
+    // Your KitBench backend
     const API = "https://kitbench-api.onrender.com";
+    const REQUEST_TIMEOUT = 20000;
 
     let mode = "login";
+    let busy = false;
 
     const form = document.getElementById("authForm");
     const message = document.getElementById("message");
-
     const nameField = document.getElementById("nameField");
     const nameInput = document.getElementById("name");
-
     const passwordInput = document.getElementById("password");
+    const confirmField = document.getElementById("confirmPasswordField");
+    const confirmInput = document.getElementById("confirmPassword");
+    const emailInput = document.getElementById("email");
+    const submitButton = document.getElementById("submitButton");
+    const loginTab = document.getElementById("loginTab");
+    const signupTab = document.getElementById("signupTab");
 
-    const confirmPasswordField =
-      document.getElementById("confirmPasswordField");
-
-    const confirmPasswordInput =
-      document.getElementById("confirmPassword");
-
-    const submitButton =
-      document.getElementById("submitButton");
+    function setMessage(text) {
+      message.textContent = text;
+    }
 
     function setMode(nextMode) {
-      mode = nextMode;
+      if (busy) return;
 
+      mode = nextMode;
       const signup = mode === "signup";
 
-      document.getElementById("loginTab")
-        .classList.toggle("active", !signup);
-
-      document.getElementById("signupTab")
-        .classList.toggle("active", signup);
+      loginTab.classList.toggle("active", !signup);
+      signupTab.classList.toggle("active", signup);
 
       document.getElementById("formTitle").textContent =
         signup ? "Create Student Account" : "Student Login";
@@ -237,64 +184,91 @@
       submitButton.textContent = signup ? "Sign Up" : "Login";
 
       nameField.hidden = !signup;
+      confirmField.hidden = !signup;
       nameInput.required = signup;
-
-      confirmPasswordField.hidden = !signup;
-      confirmPasswordInput.required = signup;
+      confirmInput.required = signup;
 
       passwordInput.autocomplete =
         signup ? "new-password" : "current-password";
 
-      message.textContent = "";
+      setMessage("");
     }
 
-    document.getElementById("loginTab").addEventListener(
-      "click",
-      () => setMode("login")
-    );
+    loginTab.addEventListener("click", () => setMode("login"));
+    signupTab.addEventListener("click", () => setMode("signup"));
 
-    document.getElementById("signupTab").addEventListener(
-      "click",
-      () => setMode("signup")
-    );
+    async function readResponse(response) {
+      const text = await response.text();
+
+      let data = {};
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(
+            "The server returned an unexpected response. Please try again."
+          );
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || data.error ||
+          `Request failed (HTTP ${response.status}).`
+        );
+      }
+
+      return data;
+    }
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
-      const email = document.getElementById("email")
-        .value.trim();
+      if (busy) return;
 
+      const email = emailInput.value.trim().toLowerCase();
       const password = passwordInput.value;
 
-      const payload = {
-        email: email,
-        password: password
-      };
+      const payload = { email, password };
 
       if (mode === "signup") {
-        if (!nameInput.value.trim()) {
-          message.textContent = "Please enter your full name.";
+        const name = nameInput.value.trim();
+
+        if (!name) {
+          setMessage("Please enter your full name.");
+          nameInput.focus();
           return;
         }
 
         if (password.length < 8) {
-          message.textContent =
-            "Password must contain at least 8 characters.";
+          setMessage("Password must contain at least 8 characters.");
+          passwordInput.focus();
           return;
         }
 
-        if (password !== confirmPasswordInput.value) {
-          message.textContent = "Passwords do not match.";
-          confirmPasswordInput.focus();
+        if (password !== confirmInput.value) {
+          setMessage("Passwords do not match.");
+          confirmInput.focus();
           return;
         }
 
-        payload.name = nameInput.value.trim();
-        payload.confirmPassword = confirmPasswordInput.value;
+        payload.name = name;
+        payload.confirmPassword = confirmInput.value;
       }
 
-      message.textContent = "Please wait...";
+      busy = true;
       submitButton.disabled = true;
+      loginTab.disabled = true;
+      signupTab.disabled = true;
+      setMessage("Connecting to KitBench server...");
+
+      const controller = new AbortController();
+      let timedOut = false;
+
+      const timer = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, REQUEST_TIMEOUT);
 
       try {
         const endpoint = mode === "signup"
@@ -303,37 +277,50 @@
 
         const response = await fetch(API + endpoint, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: controller.signal
         });
 
-        const data = await response.json();
+        const data = await readResponse(response);
 
-        if (!response.ok) {
-          throw new Error(
+        if (mode === "login") {
+          if (!data.token) {
+            setMessage(
+              data.message ||
+              "The server did not return a login token. Check the backend."
+            );
+            return;
+          }
+
+          sessionStorage.setItem("kitbenchToken", data.token);
+          setMessage("Login successful!");
+        } else {
+          setMessage(
             data.message ||
-            data.error ||
-            "Request failed. Please try again."
+            "Signup request received. Follow the email verification instructions."
           );
         }
-
-        message.textContent = data.message ||
-          (mode === "signup"
-            ? "Registration submitted. Follow the server's verification instructions."
-            : "Login successful.");
-
-        if (mode === "login" && data.token) {
-          sessionStorage.setItem("kitbenchToken", data.token);
-        }
-
       } catch (error) {
-        message.textContent =
-          error.message ||
-          "Could not connect to the server. Please try again.";
+        if (timedOut || error.name === "AbortError") {
+          setMessage(
+            "Server took too long to respond. Please try again. " +
+            "If this continues, the backend needs checking."
+          );
+        } else if (error instanceof TypeError) {
+          setMessage(
+            "Could not connect to the server. Check your internet " +
+            "connection and backend CORS settings."
+          );
+        } else {
+          setMessage(error.message || "Something went wrong. Please try again.");
+        }
       } finally {
+        clearTimeout(timer);
+        busy = false;
         submitButton.disabled = false;
+        loginTab.disabled = false;
+        signupTab.disabled = false;
       }
     });
   </script>
