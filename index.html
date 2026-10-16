@@ -1,100 +1,31 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KitBench | Student Portal</title>
-
   <style>
     * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f0f4ff;
-      color: #172554;
-    }
-
-    header {
-      background: #172554;
-      color: white;
-      padding: 22px;
-      text-align: center;
-    }
-
+    body { margin: 0; font-family: Arial, sans-serif; background: #f0f4ff; color: #172554; }
+    header { background: #172554; color: white; padding: 22px; text-align: center; }
     header h1 { margin: 0 0 8px; }
     header p { margin-bottom: 0; }
-
-    main {
-      max-width: 420px;
-      margin: 40px auto;
-      padding: 26px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 28px #17255418;
-    }
-
+    main { max-width: 420px; margin: 40px auto; padding: 26px; background: white; border-radius: 16px; box-shadow: 0 8px 28px #17255418; }
     .tabs { display: flex; gap: 10px; }
-
-    button {
-      cursor: pointer;
-      border: 0;
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 15px;
-    }
-
-    .tabs button {
-      flex: 1;
-      background: #e0e7ff;
-      color: #172554;
-    }
-
-    .tabs button.active,
-    .submit {
-      background: #2563eb;
-      color: white;
-    }
-
-    input {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0 14px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      font-size: 15px;
-    }
-
+    button { cursor: pointer; border: 0; border-radius: 8px; padding: 12px; font-size: 15px; }
+    .tabs button { flex: 1; background: #e0e7ff; color: #172554; }
+    .tabs button.active, .submit { background: #2563eb; color: white; }
+    input { display: block; width: 100%; padding: 12px; margin: 8px 0 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; }
     label { font-size: 14px; font-weight: 600; }
-
     .submit { width: 100%; margin-top: 8px; }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    #message {
-      margin-top: 16px;
-      overflow-wrap: anywhere;
-      line-height: 1.5;
-    }
-
-    .note {
-      font-size: 13px;
-      color: #64748b;
-      line-height: 1.5;
-    }
-
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    #message { margin-top: 16px; overflow-wrap: anywhere; line-height: 1.5; }
+    .note { font-size: 13px; color: #64748b; line-height: 1.5; }
     [hidden] { display: none !important; }
-
-    @media (max-width: 480px) {
-      main { margin: 24px 14px; padding: 22px; }
-    }
+    @media (max-width: 480px) { main { margin: 24px 14px; padding: 22px; } }
   </style>
 </head>
-
 <body>
   <header>
     <h1>KitBench</h1>
@@ -112,55 +43,54 @@
     <form id="authForm">
       <div id="nameField" hidden>
         <label for="name">Full Name</label>
-        <input id="name" name="name" type="text"
-          autocomplete="name" placeholder="Enter your full name">
+        <input id="name" type="text" autocomplete="name" placeholder="Enter your full name">
       </div>
 
       <label for="email">Email Address</label>
-      <input id="email" name="email" type="email"
-        autocomplete="email" placeholder="Enter your email" required>
+      <input id="email" type="email" autocomplete="email" placeholder="Enter your email" required>
+
+      <div id="codeField" hidden>
+        <label for="code">Email Verification Code</label>
+        <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+          maxlength="6" pattern="[0-9]{6}" placeholder="Enter 6-digit code">
+        <p class="note">Check your email for the 6-digit verification code.</p>
+      </div>
 
       <label for="password">Password</label>
-      <input id="password" name="password" type="password"
-        autocomplete="current-password" placeholder="Enter your password"
-        minlength="8" required>
+      <input id="password" type="password" autocomplete="current-password"
+        placeholder="Enter your password" minlength="8" required>
 
       <div id="confirmPasswordField" hidden>
         <label for="confirmPassword">Confirm Password</label>
-        <input id="confirmPassword" name="confirmPassword"
-          type="password" autocomplete="new-password"
+        <input id="confirmPassword" type="password" autocomplete="new-password"
           placeholder="Re-enter your password" minlength="8">
       </div>
 
-      <button class="submit" id="submitButton" type="submit">
-        Login
-      </button>
+      <button class="submit" id="submitButton" type="submit">Login</button>
     </form>
 
     <p id="message" role="status" aria-live="polite"></p>
-
-    <p class="note">
-      Signup may require email verification. Use your own email address
-      and keep your password private.
-    </p>
+    <p class="note">Use your own email address and keep your password private.</p>
   </main>
 
   <script>
-    // Your KitBench backend
     const API = "https://kitbench-api.onrender.com";
     const REQUEST_TIMEOUT = 20000;
 
     let mode = "login";
+    let stage = "details";
     let busy = false;
 
     const form = document.getElementById("authForm");
     const message = document.getElementById("message");
     const nameField = document.getElementById("nameField");
     const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
     const passwordInput = document.getElementById("password");
     const confirmField = document.getElementById("confirmPasswordField");
     const confirmInput = document.getElementById("confirmPassword");
-    const emailInput = document.getElementById("email");
+    const codeField = document.getElementById("codeField");
+    const codeInput = document.getElementById("code");
     const submitButton = document.getElementById("submitButton");
     const loginTab = document.getElementById("loginTab");
     const signupTab = document.getElementById("signupTab");
@@ -169,160 +99,179 @@
       message.textContent = text;
     }
 
-    function setMode(nextMode) {
-      if (busy) return;
-
-      mode = nextMode;
+    function updateForm() {
       const signup = mode === "signup";
+      const verifying = signup && stage === "verify";
 
       loginTab.classList.toggle("active", !signup);
       signupTab.classList.toggle("active", signup);
 
       document.getElementById("formTitle").textContent =
-        signup ? "Create Student Account" : "Student Login";
+        !signup ? "Student Login" :
+        verifying ? "Verify Your Email" : "Create Student Account";
 
-      submitButton.textContent = signup ? "Sign Up" : "Login";
+      nameField.hidden = !signup || verifying;
+      confirmField.hidden = !signup || verifying;
+      codeField.hidden = !verifying;
 
-      nameField.hidden = !signup;
-      confirmField.hidden = !signup;
-      nameInput.required = signup;
-      confirmInput.required = signup;
+      nameInput.required = signup && !verifying;
+      confirmInput.required = signup && !verifying;
+      codeInput.required = verifying;
 
-      passwordInput.autocomplete =
-        signup ? "new-password" : "current-password";
+      nameInput.disabled = !signup || verifying;
+      confirmInput.disabled = !signup || verifying;
+      codeInput.disabled = !verifying;
 
+      passwordInput.hidden = false;
+      passwordInput.required = true;
+      passwordInput.autocomplete = signup ? "new-password" : "current-password";
+      passwordInput.placeholder = verifying ? "Your signup password" : "Enter your password";
+
+      emailInput.readOnly = verifying;
+
+      submitButton.textContent = !signup ? "Login" :
+        verifying ? "Verify & Complete Signup" : "Send Verification Code";
+    }
+
+    function setMode(nextMode) {
+      if (busy) return;
+      mode = nextMode;
+      stage = "details";
+      emailInput.readOnly = false;
+      codeInput.value = "";
       setMessage("");
+      updateForm();
     }
 
     loginTab.addEventListener("click", () => setMode("login"));
     signupTab.addEventListener("click", () => setMode("signup"));
 
-    async function readResponse(response) {
-      const text = await response.text();
-
-      let data = {};
-      if (text) {
-        try {
-          data = JSON.parse(text);
-        } catch {
-          throw new Error(
-            "The server returned an unexpected response. Please try again."
-          );
-        }
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          data.message || data.error ||
-          `Request failed (HTTP ${response.status}).`
-        );
-      }
-
-      return data;
-    }
-
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      if (busy) return;
-
-      const email = emailInput.value.trim().toLowerCase();
-      const password = passwordInput.value;
-
-      const payload = { email, password };
-
-      if (mode === "signup") {
-        const name = nameInput.value.trim();
-
-        if (!name) {
-          setMessage("Please enter your full name.");
-          nameInput.focus();
-          return;
-        }
-
-        if (password.length < 8) {
-          setMessage("Password must contain at least 8 characters.");
-          passwordInput.focus();
-          return;
-        }
-
-        if (password !== confirmInput.value) {
-          setMessage("Passwords do not match.");
-          confirmInput.focus();
-          return;
-        }
-
-        payload.name = name;
-        payload.confirmPassword = confirmInput.value;
-      }
-
-      busy = true;
-      submitButton.disabled = true;
-      loginTab.disabled = true;
-      signupTab.disabled = true;
-      setMessage("Connecting to KitBench server...");
-
+    async function request(path, payload) {
       const controller = new AbortController();
-      let timedOut = false;
-
-      const timer = setTimeout(() => {
-        timedOut = true;
-        controller.abort();
-      }, REQUEST_TIMEOUT);
+      const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
       try {
-        const endpoint = mode === "signup"
-          ? "/api/auth/register"
-          : "/api/auth/login";
-
-        const response = await fetch(API + endpoint, {
+        const response = await fetch(API + path, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
           signal: controller.signal
         });
 
-        const data = await readResponse(response);
-
-        if (mode === "login") {
-          if (!data.token) {
-            setMessage(
-              data.message ||
-              "The server did not return a login token. Check the backend."
-            );
-            return;
+        const text = await response.text();
+        let data = {};
+        if (text) {
+          try {
+            data = JSON.parse(text);
+          } catch {
+            throw new Error("Unexpected server response. Please try again.");
           }
+        }
+
+        if (!response.ok) {
+          throw new Error(data.error || data.message || `Request failed (${response.status}).`);
+        }
+
+        return data;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (busy) return;
+
+      const email = emailInput.value.trim().toLowerCase();
+      const password = passwordInput.value;
+
+      if (mode === "signup" && stage === "details") {
+        if (nameInput.value.trim().length < 2) {
+          setMessage("Enter your full name.");
+          nameInput.focus();
+          return;
+        }
+        if (password.length < 8 || password.length > 72) {
+          setMessage("Password must be between 8 and 72 characters.");
+          passwordInput.focus();
+          return;
+        }
+        if (password !== confirmInput.value) {
+          setMessage("Passwords do not match.");
+          confirmInput.focus();
+          return;
+        }
+      }
+
+      if (mode === "signup" && stage === "verify" && !/^\d{6}$/.test(codeInput.value.trim())) {
+        setMessage("Enter the 6-digit code from your email.");
+        codeInput.focus();
+        return;
+      }
+
+      busy = true;
+      submitButton.disabled = true;
+      loginTab.disabled = true;
+      signupTab.disabled = true;
+
+      try {
+        if (mode === "login") {
+          setMessage("Logging in...");
+          const data = await request("/api/auth/login", { email, password });
+
+          if (!data.token) throw new Error("Login token was not returned by the server.");
 
           sessionStorage.setItem("kitbenchToken", data.token);
           setMessage("Login successful!");
+        } else if (stage === "details") {
+          setMessage("Sending verification code...");
+          const data = await request("/api/auth/register", {
+            name: nameInput.value.trim(),
+            email,
+            password,
+            confirmPassword: confirmInput.value
+          });
+
+          stage = "verify";
+          updateForm();
+          setMessage(data.message || "Code sent! Enter the 6-digit code below the email field.");
+          codeInput.focus();
         } else {
-          setMessage(
-            data.message ||
-            "Signup request received. Follow the email verification instructions."
-          );
+          setMessage("Verifying your email...");
+          const data = await request("/api/auth/verify-email", {
+            email,
+            code: codeInput.value.trim()
+          });
+
+          if (!data.token) throw new Error("Verification succeeded but no login token was returned.");
+
+          sessionStorage.setItem("kitbenchToken", data.token);
+          setMessage("Signup complete! Your email is verified and you are now logged in.");
+          stage = "details";
+          mode = "login";
+          emailInput.readOnly = false;
+          passwordInput.value = "";
+          confirmInput.value = "";
+          codeInput.value = "";
+          updateForm();
         }
       } catch (error) {
-        if (timedOut || error.name === "AbortError") {
-          setMessage(
-            "Server took too long to respond. Please try again. " +
-            "If this continues, the backend needs checking."
-          );
+        if (error.name === "AbortError") {
+          setMessage("The server took too long to respond. Please try again.");
         } else if (error instanceof TypeError) {
-          setMessage(
-            "Could not connect to the server. Check your internet " +
-            "connection and backend CORS settings."
-          );
+          setMessage("Could not connect. Check your internet connection and backend.");
         } else {
           setMessage(error.message || "Something went wrong. Please try again.");
         }
       } finally {
-        clearTimeout(timer);
         busy = false;
         submitButton.disabled = false;
         loginTab.disabled = false;
         signupTab.disabled = false;
       }
     });
+
+    updateForm();
   </script>
 </body>
 </html>
