@@ -75,6 +75,7 @@
 
   <script>
     const API = "https://kitbench-api.onrender.com";
+    const KITBENCH_HOME = "https://chennam387-collab.github.io/KitBench/";
     const REQUEST_TIMEOUT = 20000;
 
     let mode = "login";
@@ -160,6 +161,7 @@
 
         const text = await response.text();
         let data = {};
+
         if (text) {
           try {
             data = JSON.parse(text);
@@ -191,11 +193,13 @@
           nameInput.focus();
           return;
         }
+
         if (password.length < 8 || password.length > 72) {
           setMessage("Password must be between 8 and 72 characters.");
           passwordInput.focus();
           return;
         }
+
         if (password !== confirmInput.value) {
           setMessage("Passwords do not match.");
           confirmInput.focus();
@@ -203,7 +207,8 @@
         }
       }
 
-      if (mode === "signup" && stage === "verify" && !/^\d{6}$/.test(codeInput.value.trim())) {
+      if (mode === "signup" && stage === "verify" &&
+          !/^\d{6}$/.test(codeInput.value.trim())) {
         setMessage("Enter the 6-digit code from your email.");
         codeInput.focus();
         return;
@@ -217,14 +222,23 @@
       try {
         if (mode === "login") {
           setMessage("Logging in...");
+
           const data = await request("/api/auth/login", { email, password });
 
-          if (!data.token) throw new Error("Login token was not returned by the server.");
+          if (!data.token) {
+            throw new Error("Login token was not returned by the server.");
+          }
 
           sessionStorage.setItem("kitbenchToken", data.token);
-          setMessage("Login successful!");
+          sessionStorage.setItem("kitbenchUser", JSON.stringify(data.user || {}));
+
+          setMessage("Login successful! Opening KitBench...");
+          window.location.assign(KITBENCH_HOME);
+          return;
+
         } else if (stage === "details") {
           setMessage("Sending verification code...");
+
           const data = await request("/api/auth/register", {
             name: nameInput.value.trim(),
             email,
@@ -234,26 +248,27 @@
 
           stage = "verify";
           updateForm();
-          setMessage(data.message || "Code sent! Enter the 6-digit code below the email field.");
+          setMessage(data.message || "Code sent! Enter it in the field below your email.");
           codeInput.focus();
+
         } else {
           setMessage("Verifying your email...");
+
           const data = await request("/api/auth/verify-email", {
             email,
             code: codeInput.value.trim()
           });
 
-          if (!data.token) throw new Error("Verification succeeded but no login token was returned.");
+          if (!data.token) {
+            throw new Error("Verification succeeded but no login token was returned.");
+          }
 
           sessionStorage.setItem("kitbenchToken", data.token);
-          setMessage("Signup complete! Your email is verified and you are now logged in.");
-          stage = "details";
-          mode = "login";
-          emailInput.readOnly = false;
-          passwordInput.value = "";
-          confirmInput.value = "";
-          codeInput.value = "";
-          updateForm();
+          sessionStorage.setItem("kitbenchUser", JSON.stringify(data.user || {}));
+
+          setMessage("Signup complete! Opening KitBench...");
+          window.location.assign(KITBENCH_HOME);
+          return;
         }
       } catch (error) {
         if (error.name === "AbortError") {
