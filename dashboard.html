@@ -1,0 +1,130 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KitBench | Student Dashboard</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f4ff;
+      color: #172554;
+    }
+    header {
+      background: #172554;
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 6%;
+      background: white;
+    }
+    button, .card a {
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 18px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    main {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+    .welcome {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 5px 18px #17255410;
+    }
+    .card p { line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <nav>
+    <strong>KitBench</strong>
+    <button id="logoutButton">Logout</button>
+  </nav>
+
+  <header>
+    <h1>Student Dashboard</h1>
+    <p>Build Skills. Create Projects. Learn Together.</p>
+  </header>
+
+  <main>
+    <section class="welcome">
+      <h2 id="welcomeText">Welcome to KitBench!</h2>
+      <p>Your learning journey starts here.</p>
+    </section>
+
+    <section class="cards">
+      <div class="card">
+        <h3>Learn Courses</h3>
+        <p>Explore learning materials and improve your technical skills.</p>
+        <a href="https://www.youtube.com/" target="_blank" rel="noopener">Explore Videos</a>
+      </div>
+
+      <div class="card">
+        <h3>Student Projects</h3>
+        <p>Discover project ideas and learn how to build them.</p>
+        <a href="https://www.youtube.com/" target="_blank" rel="noopener">Explore Projects</a>
+      </div>
+
+      <div class="card">
+        <h3>Buy Kits</h3>
+        <p>Explore educational kits for your next project.</p>
+        <a href="mailto:kitbench@example.com">Contact Us</a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const token = sessionStorage.getItem("kitbenchToken");
+    const rawUser = sessionStorage.getItem("kitbenchUser");
+
+    if (!token) {
+      window.location.replace("./index.html");
+    } else {
+      try {
+        const user = JSON.parse(rawUser || "{}");
+        const name = user.name || user.fullName || user.email || "";
+        if (name) {
+          document.getElementById("welcomeText").textContent =
+            "Welcome, " + name + "!";
+        }
+      } catch (error) {
+        console.log("Could not read student details.");
+      }
+    }
+
+    document.getElementById("logoutButton").addEventListener("click", () => {
+      sessionStorage.removeItem("kitbenchToken");
+      sessionStorage.removeItem("kitbenchUser");
+      window.location.replace("./index.html");
+    });
+  </script>
+</body>
+</html>
+```
